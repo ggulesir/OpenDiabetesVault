@@ -21,5 +21,11 @@ package de.jhit.opendiabetes.vault.processing;
  * @author juehv
  */
 public class StaticInsulinSensivityCalculatorOptions {
+    
+    public final long range;
+    
+    public StaticInsulinSensivityCalculatorOptions (long range) {
+        this.range = range;
+    }
 
 }
