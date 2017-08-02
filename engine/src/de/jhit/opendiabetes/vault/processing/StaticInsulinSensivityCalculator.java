@@ -18,6 +18,7 @@ package de.jhit.opendiabetes.vault.processing;
 
 import de.jhit.opendiabetes.vault.container.VaultEntry;
 import static de.jhit.opendiabetes.vault.container.VaultEntryType.BOLUS_NORMAL;
+import static de.jhit.opendiabetes.vault.container.VaultEntryType.GLUCOSE_CGM;
 import static de.jhit.opendiabetes.vault.container.VaultEntryType.MEAL_MANUAL;
 import de.jhit.opendiabetes.vault.processing.filter.TimePointFilter;
 import java.util.ArrayList;
@@ -28,7 +29,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.Iterator;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  *
@@ -54,7 +54,12 @@ public class StaticInsulinSensivityCalculator {
         List<Date> bolusEvents = new ArrayList<>();
         List<List<VaultEntry>> cuttenTimeSeries = new ArrayList<>();
         int bolusCount = 0;
-        int mealCount = 0;
+        boolean bolusFound = false;
+        //initialize date
+        Date bolusDate = new Date(0);
+        double bolusVal= 0;
+        double cgmBegin = 0;
+        double cgmEnd = 1000;
         
         // Add time series with time point filter where bolus event happened.
         for (VaultEntry entry : data) {
@@ -94,19 +99,49 @@ public class StaticInsulinSensivityCalculator {
             System.out.println();
         }
         
+        //TODO Boundary checking, first bolus should have enough reading before, last bolus
+        // also should have enough reading after
+        //TODO merging bolus events within max 30 min distance
         
-
         // remaining sets, elect where cgm is decreasing after bolus event
+        for (List<VaultEntry> listEntry : cuttenTimeSeries) {
+            bolusFound = false;
+            bolusVal = 0;
+           //set date to zero
+           bolusDate = new Date(0);
+            cgmBegin = 0;
+            cgmEnd = Double.MAX_VALUE;
+            for (VaultEntry entry : listEntry) {
+                if (entry.getType().equals(BOLUS_NORMAL) && !bolusFound) {
+                    bolusFound = true;
+                    bolusDate = entry.getTimestamp();
+                    bolusVal = entry.getValue();
+                    System.out.println("Bolus FOUND, value: " + bolusVal);
+                }
+                if (entry.getType().equals(GLUCOSE_CGM) && !bolusFound) {
+                    cgmBegin = entry.getValue();
+                    System.out.println("cgm begin: " + cgmBegin);
+                }
+                if (bolusFound && entry.getType().equals(GLUCOSE_CGM) && entry.getValue() <= cgmEnd) {
+                    cgmEnd = entry.getValue();
+                    System.out.println("cgm end: " + cgmEnd);
+                }
+                if (bolusFound && entry.getType().equals(GLUCOSE_CGM) && entry.getValue() > cgmEnd) {
+                    System.out.println("Before break");
+                    break;
+                }
+                
+            }
+            if (bolusFound && cgmBegin != 0 && cgmEnd != Double.MAX_VALUE && bolusVal != 0) {
+                //calculate sensitivity value
+                // List<Pair<Date, Double>> retVal = new ArrayList<>();
+                Pair <Date, Double> pair = new Pair <Date, Double>(bolusDate, (cgmBegin-cgmEnd)/bolusVal);
+                retVal.add(pair);
+                //retVal.add(bolusDate, (cgmBegin-cgmEnd)/bolusVal);
+                System.out.println("Sensitivity " + (cgmBegin-cgmEnd)/bolusVal + " at " + bolusDate);
+            }
+        }
         
-        // TODO implement here
-        //
-        // prepare filter
-        // filter data
-        //
-        // loop over data:
-        // calculate sensitivity
-        // add timepoint to return array
-        //
         return retVal;
     }
   
