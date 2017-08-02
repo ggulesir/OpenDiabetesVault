@@ -59,7 +59,7 @@ public class StaticInsulinSensivityCalculator {
         Date bolusDate = new Date(0);
         double bolusVal= 0;
         double cgmBegin = 0;
-        double cgmEnd = 1000;
+        double cgmEnd = Double.MAX_VALUE;
         
         // Add time series with time point filter where bolus event happened.
         for (VaultEntry entry : data) {
@@ -89,14 +89,6 @@ public class StaticInsulinSensivityCalculator {
                 iterator.remove();
             }
             
-        }
-        // Printout for testing purposes
-        for (List<VaultEntry> listEntry : cuttenTimeSeries) {
-            System.out.println("Serie:");
-            for (VaultEntry entry : listEntry) {
-              System.out.print(entry.getTimestamp() + ", ");
-            }
-            System.out.println();
         }
         
         //TODO Boundary checking, first bolus should have enough reading before, last bolus
@@ -134,10 +126,8 @@ public class StaticInsulinSensivityCalculator {
             }
             if (bolusFound && cgmBegin != 0 && cgmEnd != Double.MAX_VALUE && bolusVal != 0) {
                 //calculate sensitivity value
-                // List<Pair<Date, Double>> retVal = new ArrayList<>();
                 Pair <Date, Double> pair = new Pair <Date, Double>(bolusDate, (cgmBegin-cgmEnd)/bolusVal);
                 retVal.add(pair);
-                //retVal.add(bolusDate, (cgmBegin-cgmEnd)/bolusVal);
                 System.out.println("Sensitivity " + (cgmBegin-cgmEnd)/bolusVal + " at " + bolusDate);
             }
         }
