@@ -51,7 +51,6 @@ public class SensitivityDataset {
         vaultEntries.add(new VaultEntry(VaultEntryType.GLUCOSE_CGM, TimestampUtils.createCleanTimestamp("2016.04.18-08:58", "yyyy.MM.dd-HH:mm"), 168));
         vaultEntries.add(new VaultEntry(VaultEntryType.BASAL_PROFILE, TimestampUtils.createCleanTimestamp("2016.04.18-09:00", "yyyy.MM.dd-HH:mm"), 1.3));
         vaultEntries.add(new VaultEntry(VaultEntryType.GLUCOSE_CGM, TimestampUtils.createCleanTimestamp("2016.04.18-09:13", "yyyy.MM.dd-HH:mm"), 156));
-        //vaultEntries.add(new VaultEntry(VaultEntryType.MEAL_MANUAL, TimestampUtils.createCleanTimestamp("2016.04.18-09:14", "yyyy.MM.dd-HH:mm"), 5.6));
         vaultEntries.add(new VaultEntry(VaultEntryType.GLUCOSE_CGM, TimestampUtils.createCleanTimestamp("2016.04.18-09:29", "yyyy.MM.dd-HH:mm"), 141));
         vaultEntries.add(new VaultEntry(VaultEntryType.GLUCOSE_CGM_ALERT, TimestampUtils.createCleanTimestamp("2016.04.18-09:31", "yyyy.MM.dd-HH:mm"), 145));
         vaultEntries.add(new VaultEntry(VaultEntryType.BOLUS_NORMAL, TimestampUtils.createCleanTimestamp("2016.04.18-09:33", "yyyy.MM.dd-HH:mm"), 2));

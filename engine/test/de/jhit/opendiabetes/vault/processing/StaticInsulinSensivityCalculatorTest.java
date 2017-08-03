@@ -19,7 +19,11 @@ package de.jhit.opendiabetes.vault.processing;
 import de.jhit.opendiabetes.vault.container.VaultEntry;
 import de.jhit.opendiabetes.vault.testhelper.SensitivityDataset;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import javafx.util.Pair;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -59,20 +63,16 @@ public class StaticInsulinSensivityCalculatorTest extends Assert {
     @Test
     public void testCalculateFromData() throws ParseException{
         System.out.println("calculateFromData");
+        long range = 120;
         List<VaultEntry> data = SensitivityDataset.getSensitivityDataset();
-        StaticInsulinSensivityCalculatorOptions options = new StaticInsulinSensivityCalculatorOptions(20);
+        StaticInsulinSensivityCalculatorOptions options = new StaticInsulinSensivityCalculatorOptions(range);
         StaticInsulinSensivityCalculator instance = new StaticInsulinSensivityCalculator(options);
-        try{
-            instance.calculateFromData(data);
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-        //List<Pair<Date, Double>> expResult = null;
-        //List<Pair<Date, Double>> result = instance.calculateFromData(data);
-        //assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-       // fail("The test case is a prototype.");
+        Date bolusDate = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").parse("2016-04-18 09:33:00");
+        Pair <Date, Double> pair = new Pair <>(bolusDate, 11.5);
+        List<Pair<Date, Double>> expResult = new ArrayList<>();
+        expResult.add(pair);
+        List<Pair<Date, Double>> result = instance.calculateFromData(data);
+        assertEquals(expResult, result);
         
     }
-
 }
