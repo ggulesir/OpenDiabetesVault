@@ -17,6 +17,7 @@
 package de.jhit.opendiabetes.vault.processing;
 
 import de.jhit.opendiabetes.vault.container.VaultEntry;
+import de.jhit.opendiabetes.vault.container.VaultEntryType;
 import static de.jhit.opendiabetes.vault.container.VaultEntryType.BOLUS_NORMAL;
 import static de.jhit.opendiabetes.vault.container.VaultEntryType.GLUCOSE_CGM;
 import static de.jhit.opendiabetes.vault.container.VaultEntryType.MEAL_MANUAL;
@@ -58,21 +59,18 @@ public class StaticInsulinSensivityCalculator {
      */
     public List<Pair<Date, Double>> calculateFromData(List<VaultEntry> data) {
         List<Pair<Date, Double>> retVal = new ArrayList<>();
-        List<Date> bolusEvents = new ArrayList<>();
         List<List<VaultEntry>> cutTimeSeries = new ArrayList<>();
         int bolusCount;
         boolean bolusFound;
         Date bolusDate;
         double bolusVal, cgmBegin, cgmEnd;
         
+         FilterEvent eventFilter = new FilterEvent();
+        VaultEntryType type = BOLUS_NORMAL;
+        List<Date> bolusEvents = new ArrayList<>();
         // Save timestamp of each bolus event
-        for (VaultEntry entry : data) {
-            if (entry.getType().equals(BOLUS_NORMAL)) {
-                if (isInsideRange (data, entry.getTimestamp())) {
-                    bolusEvents.add(entry.getTimestamp());
-                }
-            }
-        }
+        bolusEvents = eventFilter.filter(data, type, options.range);
+        
         // Cut time series including bolus event in middle
         for (Date date : bolusEvents) {
             LocalTime localTime = LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault()).toLocalTime();
