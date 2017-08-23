@@ -32,6 +32,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.Iterator;
+import java.util.concurrent.TimeUnit;
 import static java.util.concurrent.TimeUnit.*;
 
 /**
@@ -46,12 +47,6 @@ public class StaticInsulinSensivityCalculator {
         this.options = options;
     }
 
-    public boolean isInsideRange (List<VaultEntry> list, Date bolusDate) {
-        long threshold = MILLISECONDS.convert(options.range, MINUTES);
-        long pre = bolusDate.getTime() - list.get(0).getTimestamp().getTime();
-        long post =  list.get(list.size() -1).getTimestamp().getTime()- bolusDate.getTime();
-        return (pre >= threshold && post >= threshold);
-    }
     /**
      * Calculate insulin sensitivity from given data
      *
@@ -62,12 +57,13 @@ public class StaticInsulinSensivityCalculator {
     public List<Pair<Date, Double>> calculateFromData(List<VaultEntry> data) {
         List<Pair<Date, Double>> retVal = new ArrayList<>();
         List<List<VaultEntry>> cutTimeSeries = new ArrayList<>();
+        List<Pair<Date, Double>> bolusInSpan = new ArrayList<>();
         int bolusCount;
         boolean bolusFound;
         Date bolusDate;
         double bolusVal, cgmBegin, cgmEnd;
         
-         FilterEvent eventFilter = new FilterEvent();
+        FilterEvent eventFilter = new FilterEvent();
         VaultEntryType type = BOLUS_NORMAL;
         // Save timestamp of each bolus event
         List<Date> bolusEvents = eventFilter.filter(data, type, options.range);
@@ -78,6 +74,31 @@ public class StaticInsulinSensivityCalculator {
             TimePointFilter filter = new TimePointFilter(localTime, (int) options.range);
             cutTimeSeries.add((filter.filter(data)).filteredData);
         }
+        
+        // Merging bolus events within max 30 min distance
+        long span = MILLISECONDS.convert(options.bolusSpan, MINUTES);
+        for (List<VaultEntry> timeSerie : cutTimeSeries) {
+            for (Date blsDate : bolusEvents) {
+                for (Iterator<VaultEntry> iterator = timeSerie.iterator(); iterator.hasNext();) {
+                    VaultEntry entry = iterator.next();
+                    if (entry.getType().equals(BOLUS_NORMAL)) {
+                        long diffInMillies = entry.getTimestamp().getTime() - blsDate.getTime();
+                        if (diffInMillies < span && diffInMillies > 0) {
+                            // Retrive bolus value to be added to previous bolus event, create pair with previous
+                            // bolus date and add it to bolusInSpan list.
+                            Pair <Date, Double> pair = new Pair <>(blsDate, entry.getValue());
+                            bolusInSpan.add(pair);
+                            // Remove this bolus event inside bolusSpan from the cutTimeSeries
+                            // OR dont remove, later ignore bolus events within bolusSpan
+                            iterator.remove();
+                        }
+                    }
+                }
+            }
+        }
+        //TODO Find the actual bolus event inside cutTimeSeries, by intersecting the date from blousInSpan and add bolus
+        // value to vaultEntry value.
+        
         //Check each sub timeseries whether they have another bolus or any meal event within the range.
         for(Iterator<List<VaultEntry>> iterator = cutTimeSeries.iterator(); iterator.hasNext();){
             bolusCount = 0;
@@ -97,9 +118,8 @@ public class StaticInsulinSensivityCalculator {
             
         }
         
-        //TODO merging bolus events within max 30 min distance
-        
-        // remaining sets, elect where cgm is decreasing after bolus event
+        //TODO remaining sets, elect where cgm is decreasing after bolus event
+        // Correction: instead of monoton decreasing, look for delta, (cgmT - cgmT+2h) < 0
         for (List<VaultEntry> listEntry : cutTimeSeries) {
             // Initialize variables for next time series
             bolusFound = false;

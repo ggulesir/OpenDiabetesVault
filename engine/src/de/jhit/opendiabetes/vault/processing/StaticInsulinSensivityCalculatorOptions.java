@@ -23,9 +23,11 @@ package de.jhit.opendiabetes.vault.processing;
 public class StaticInsulinSensivityCalculatorOptions {
     
     public final long range;
+    public final long bolusSpan;
     
-    public StaticInsulinSensivityCalculatorOptions (long range) {
+    public StaticInsulinSensivityCalculatorOptions (long range, long span) {
         this.range = range;
+        this.bolusSpan = span;
     }
 
 }
