@@ -19,8 +19,10 @@ package de.jhit.opendiabetes.vault.processing;
 import de.jhit.opendiabetes.vault.container.VaultEntry;
 import de.jhit.opendiabetes.vault.container.VaultEntryType;
 import static de.jhit.opendiabetes.vault.container.VaultEntryType.BOLUS_NORMAL;
+import static de.jhit.opendiabetes.vault.container.VaultEntryType.EXERCISE_MANUAL;
 import static de.jhit.opendiabetes.vault.container.VaultEntryType.GLUCOSE_CGM;
 import static de.jhit.opendiabetes.vault.container.VaultEntryType.MEAL_MANUAL;
+import static de.jhit.opendiabetes.vault.importer.validator.MedtronicCsvValidator.TYPE.BOLUS_SQUARE;
 import de.jhit.opendiabetes.vault.processing.filter.TimePointFilter;
 import java.util.ArrayList;
 import java.util.Date;
@@ -67,9 +69,8 @@ public class StaticInsulinSensivityCalculator {
         
          FilterEvent eventFilter = new FilterEvent();
         VaultEntryType type = BOLUS_NORMAL;
-        List<Date> bolusEvents = new ArrayList<>();
         // Save timestamp of each bolus event
-        bolusEvents = eventFilter.filter(data, type, options.range);
+        List<Date> bolusEvents = eventFilter.filter(data, type, options.range);
         
         // Cut time series including bolus event in middle
         for (Date date : bolusEvents) {
@@ -85,7 +86,8 @@ public class StaticInsulinSensivityCalculator {
               if (entry.getType().equals(BOLUS_NORMAL)) {
                     bolusCount++;
               }
-              if (entry.getType().equals(MEAL_MANUAL)) {
+              if (entry.getType().equals(MEAL_MANUAL) || entry.getType().equals(BOLUS_SQUARE)
+                      || entry.getType().equals(EXERCISE_MANUAL)) {
                 iterator.remove();
               }
             }
