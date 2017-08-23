@@ -64,8 +64,9 @@ public class StaticInsulinSensivityCalculatorTest extends Assert {
     public void testCalculateFromData() throws ParseException{
         System.out.println("calculateFromData");
         long range = 120;
+        long bolusSpan = 30;
         List<VaultEntry> data = SensitivityDataset.getSensitivityDataset();
-        StaticInsulinSensivityCalculatorOptions options = new StaticInsulinSensivityCalculatorOptions(range);
+        StaticInsulinSensivityCalculatorOptions options = new StaticInsulinSensivityCalculatorOptions(range, bolusSpan);
         StaticInsulinSensivityCalculator instance = new StaticInsulinSensivityCalculator(options);
         Date bolusDate = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").parse("2016-04-18 09:33:00");
         Pair <Date, Double> pair = new Pair <>(bolusDate, 11.5);
