@@ -32,7 +32,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.Iterator;
-import java.util.concurrent.TimeUnit;
 import static java.util.concurrent.TimeUnit.*;
 
 /**
@@ -57,7 +56,6 @@ public class StaticInsulinSensivityCalculator {
     public List<Pair<Date, Double>> calculateFromData(List<VaultEntry> data) {
         List<Pair<Date, Double>> retVal = new ArrayList<>();
         List<List<VaultEntry>> cutTimeSeries = new ArrayList<>();
-        List<Pair<Date, Double>> bolusInSpan = new ArrayList<>();
         int bolusCount;
         boolean bolusFound;
         Date bolusDate;
@@ -74,7 +72,8 @@ public class StaticInsulinSensivityCalculator {
             TimePointFilter filter = new TimePointFilter(localTime, (int) options.range);
             cutTimeSeries.add((filter.filter(data)).filteredData);
         }
-        
+
+       double bolusAdd = 0.0;
         // Merging bolus events within max 30 min distance
         long span = MILLISECONDS.convert(options.bolusSpan, MINUTES);
         for (List<VaultEntry> timeSerie : cutTimeSeries) {
@@ -83,21 +82,30 @@ public class StaticInsulinSensivityCalculator {
                     VaultEntry entry = iterator.next();
                     if (entry.getType().equals(BOLUS_NORMAL)) {
                         long diffInMillies = entry.getTimestamp().getTime() - blsDate.getTime();
+                        // Next bolus events within the bolusSpan
                         if (diffInMillies < span && diffInMillies > 0) {
-                            // Retrive bolus value to be added to previous bolus event, create pair with previous
-                            // bolus date and add it to bolusInSpan list.
-                            Pair <Date, Double> pair = new Pair <>(blsDate, entry.getValue());
-                            bolusInSpan.add(pair);
+                            // Retrive bolus value to be added to previous bolus event
+                            Double current = bolusAdd;
+                            bolusAdd = entry.getValue() + current;
                             // Remove this bolus event inside bolusSpan from the cutTimeSeries
                             // OR dont remove, later ignore bolus events within bolusSpan
                             iterator.remove();
                         }
+                        
                     }
                 }
+                // Merge bolus value here and initialize it for next cut time serie (next bolus cluster)
+                for (Iterator<VaultEntry> it = timeSerie.iterator(); it.hasNext();) {
+                    VaultEntry ent = it.next();
+                    if (ent.getType().equals(BOLUS_NORMAL) && ent.getTimestamp().equals(blsDate)) {
+                       Double current = ent.getValue();
+                       ent.setValue(current + bolusAdd);
+                       bolusAdd = 0.0; 
+                    }
+                }
+                
             }
         }
-        //TODO Find the actual bolus event inside cutTimeSeries, by intersecting the date from blousInSpan and add bolus
-        // value to vaultEntry value.
         
         //Check each sub timeseries whether they have another bolus or any meal event within the range.
         for(Iterator<List<VaultEntry>> iterator = cutTimeSeries.iterator(); iterator.hasNext();){
