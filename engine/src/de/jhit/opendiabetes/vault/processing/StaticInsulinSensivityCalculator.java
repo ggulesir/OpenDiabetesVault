@@ -57,7 +57,7 @@ public class StaticInsulinSensivityCalculator {
         List<Pair<Date, Double>> retVal = new ArrayList<>();
         List<List<VaultEntry>> cutTimeSeries = new ArrayList<>();
         int bolusCount;
-        boolean bolusFound;
+        boolean bolusFound, cgmBeginFound;
         Date bolusDate;
         double bolusVal, cgmBegin, cgmEnd;
         
@@ -85,20 +85,19 @@ public class StaticInsulinSensivityCalculator {
                         // Next bolus events within the bolusSpan
                         if (diffInMillies < span && diffInMillies > 0) {
                             // Retrive bolus value to be added to previous bolus event
-                            Double current = bolusAdd;
+                            double current = bolusAdd;
                             bolusAdd = entry.getValue() + current;
                             // Remove this bolus event inside bolusSpan from the cutTimeSeries
-                            // OR dont remove, later ignore bolus events within bolusSpan
                             iterator.remove();
+                            // OR dont remove, later ignore bolus events within bolusSpan
                         }
-                        
                     }
                 }
                 // Merge bolus value here and initialize it for next cut time serie (next bolus cluster)
                 for (Iterator<VaultEntry> it = timeSerie.iterator(); it.hasNext();) {
                     VaultEntry ent = it.next();
                     if (ent.getType().equals(BOLUS_NORMAL) && ent.getTimestamp().equals(blsDate)) {
-                       Double current = ent.getValue();
+                       double current = ent.getValue();
                        ent.setValue(current + bolusAdd);
                        bolusAdd = 0.0; 
                     }
@@ -126,39 +125,48 @@ public class StaticInsulinSensivityCalculator {
             
         }
         
-        //TODO remaining sets, elect where cgm is decreasing after bolus event
-        // Correction: instead of monoton decreasing, look for delta, (cgmT - cgmT+2h) < 0
-        for (List<VaultEntry> listEntry : cutTimeSeries) {
+        //Remaining sets, elect where cgm is decreasing after bolus event
+        //Looking for delta, (cgmT+delayedStart - cgmT+2h) < 0 wıth delayed start in mins
+        for (Iterator<List<VaultEntry>> iterator = cutTimeSeries.iterator(); iterator.hasNext();) {
             // Initialize variables for next time series
             bolusFound = false;
-            bolusVal = 0;
+            cgmBeginFound = false;
+            bolusVal = 0.0;
             bolusDate = new Date(0);
-            cgmBegin = Double.MIN_VALUE;
-            cgmEnd = Double.MAX_VALUE;
+            cgmBegin = 0.0;
+            cgmEnd = 0.0;
+            long delayedStart = MILLISECONDS.convert(options.cgmDelayedStart, MINUTES);
+            List<VaultEntry> listEntry = iterator.next();
             for (VaultEntry entry : listEntry) {
+                // Bolus event is found, save the bolus value for later calculation
                 if (entry.getType().equals(BOLUS_NORMAL) && !bolusFound) {
                     bolusFound = true;
                     bolusDate = entry.getTimestamp();
                     bolusVal = entry.getValue();
                 }
-                if (entry.getType().equals(GLUCOSE_CGM) && !bolusFound) {
-                    cgmBegin = entry.getValue();
+                // Dont care vault entries after bolus event within delayedstart duration
+                if (bolusFound && (entry.getTimestamp().getTime() - bolusDate.getTime()) < delayedStart) {
+                    continue;
                 }
-                if (bolusFound && entry.getType().equals(GLUCOSE_CGM) && entry.getValue() <= cgmEnd) {
-                    cgmEnd = entry.getValue();
+                // After delayedStart period is over
+                if (bolusFound && (entry.getTimestamp().getTime() - bolusDate.getTime()) >= delayedStart) {
+                    // save the  first cgm value
+                    if (entry.getType().equals(GLUCOSE_CGM) && !cgmBeginFound) {
+                        cgmBegin = entry.getValue();
+                        cgmBeginFound = true;
+                    }
+                    // For rest of cgm entries, keep updating cgmEnd value
+                    if (entry.getType().equals(GLUCOSE_CGM) && cgmBeginFound) {
+                        cgmEnd = entry.getValue();
+                    }
                 }
-                if (bolusFound && entry.getType().equals(GLUCOSE_CGM) && entry.getValue() > cgmEnd) {
-                    break;
-                }
-                
             }
-            //calculate sensitivity value
-            if (bolusFound && cgmBegin != Double.MIN_VALUE && cgmEnd != Double.MAX_VALUE && bolusVal != 0) {
-                Pair <Date, Double> pair = new Pair <>(bolusDate, (cgmBegin-cgmEnd)/bolusVal);
+            //calculate sensitivity value, only add into list if delta is < 0 (decreasing cgm)
+            if (bolusFound && cgmBeginFound && (cgmEnd - cgmBegin < 0) && bolusVal != 0.0) {
+                Pair <Date, Double> pair = new Pair <>(bolusDate, (cgmEnd-cgmBegin)/bolusVal);
                 retVal.add(pair);
             }
         }
-        
         return retVal;
     }
   

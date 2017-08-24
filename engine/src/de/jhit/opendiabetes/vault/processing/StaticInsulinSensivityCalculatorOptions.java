@@ -24,10 +24,12 @@ public class StaticInsulinSensivityCalculatorOptions {
     
     public final long range;
     public final long bolusSpan;
+    public final long cgmDelayedStart;
     
-    public StaticInsulinSensivityCalculatorOptions (long range, long span) {
+    public StaticInsulinSensivityCalculatorOptions (long range, long bolusSpan, long cgmDelayedStart) {
         this.range = range;
-        this.bolusSpan = span;
+        this.bolusSpan = bolusSpan;
+        this.cgmDelayedStart = cgmDelayedStart;
     }
 
 }
