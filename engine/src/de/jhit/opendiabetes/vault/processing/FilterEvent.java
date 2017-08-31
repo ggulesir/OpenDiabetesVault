@@ -42,7 +42,6 @@ public class FilterEvent {
         List <Date> events = new ArrayList<>();
         Date begin = data.get(0).getTimestamp();
         Date end = data.get(data.size() -1).getTimestamp();
-        
         for (VaultEntry entry : data) {
             if (entry.getType().equals(event)) {
                 if (isInsideRange(data, entry.getTimestamp(), buffer)) {

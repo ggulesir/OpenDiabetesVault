@@ -42,6 +42,7 @@ public enum VaultEntryType {
     GLUCOSE_BG,
     GLUCOSE_BG_MANUAL,
     GLUCOSE_BOLUS_CALCULATION,
+    GLUCOSE_ELEVATION_30,
     // CGM system
     CGM_REPLACED,
     CGM_CONNECTION_ERROR,
@@ -59,6 +60,8 @@ public enum VaultEntryType {
     PUMP_SUSPEND,
     PUMP_UNSUSPEND,
     PUMP_UNKNOWN_ERROR,
+    PUMP_AUTONOMOUS_SUSPEND,
+    PUMP_UNTRACKED_ERROR,
     // Sleep
     SLEEP_LIGHT,
     SLEEP_REM,
