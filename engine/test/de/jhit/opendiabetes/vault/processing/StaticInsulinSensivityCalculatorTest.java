@@ -69,10 +69,16 @@ public class StaticInsulinSensivityCalculatorTest extends Assert {
         List<VaultEntry> data = SensitivityDataset.getSensitivityDataset();
         StaticInsulinSensivityCalculatorOptions options = new StaticInsulinSensivityCalculatorOptions(range, bolusSpan,cgmDelayedStart);
         StaticInsulinSensivityCalculator instance = new StaticInsulinSensivityCalculator(options);
-        Date bolusDate = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").parse("2016-04-18 09:33:00");
-        Pair <Date, Double> pair = new Pair <>(bolusDate, -1.6666666666666667);
+        Date bolusDate1 = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").parse("2017-08-02 06:16:00");
+        Date bolusDate2 = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").parse("2017-08-02 14:04:00");
+        Date bolusDate3 = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").parse("2017-08-03 04:25:00");
+        Pair <Date, Double> pair1 = new Pair <>(bolusDate1, -18.333333333333332);
+        Pair <Date, Double> pair2 = new Pair <>(bolusDate2, -15.679012345679013);
+        Pair <Date, Double> pair3 = new Pair <>(bolusDate3, -1.6666666666666667);
         List<Pair<Date, Double>> expResult = new ArrayList<>();
-        expResult.add(pair);
+        expResult.add(pair1);
+        expResult.add(pair2);
+        expResult.add(pair3);
         List<Pair<Date, Double>> result = instance.calculateFromData(data);
         assertEquals(expResult, result);
     }

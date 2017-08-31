@@ -23,7 +23,7 @@ package de.jhit.opendiabetes.vault.container;
 public enum VaultEntryType {
     // Bolus
     BOLUS_NORMAL,
-    BOLUS_SQARE,
+    BOLUS_SQUARE,
     // Basal
     BASAL_PROFILE,
     BASAL_MANUAL,
