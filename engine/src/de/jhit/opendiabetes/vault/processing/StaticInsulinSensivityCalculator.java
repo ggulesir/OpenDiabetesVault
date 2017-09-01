@@ -22,7 +22,7 @@ import static de.jhit.opendiabetes.vault.container.VaultEntryType.BOLUS_NORMAL;
 import static de.jhit.opendiabetes.vault.container.VaultEntryType.EXERCISE_MANUAL;
 import static de.jhit.opendiabetes.vault.container.VaultEntryType.GLUCOSE_CGM;
 import static de.jhit.opendiabetes.vault.container.VaultEntryType.MEAL_MANUAL;
-import static de.jhit.opendiabetes.vault.container.VaultEntryType.BOLUS_SQUARE;
+import static de.jhit.opendiabetes.vault.container.VaultEntryType.BOLUS_SQARE;
 import de.jhit.opendiabetes.vault.processing.filter.DateTimePointFilter;
 import java.util.ArrayList;
 import java.util.Date;
@@ -110,7 +110,7 @@ public class StaticInsulinSensivityCalculator {
                 if (entry.getType().equals(BOLUS_NORMAL)) {
                     bolusCount++;
                 }
-                if (entry.getType().equals(MEAL_MANUAL) || entry.getType().equals(BOLUS_SQUARE)
+                if (entry.getType().equals(MEAL_MANUAL) || entry.getType().equals(BOLUS_SQARE)
                       || entry.getType().equals(EXERCISE_MANUAL)) {
                     otherFound = true;
                 }
